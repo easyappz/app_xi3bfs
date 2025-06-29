@@ -21,6 +21,10 @@
   font-weight: bold;
 }
 
+.calculator-error {
+  margin-bottom: 10px;
+}
+
 .calculator-display {
   margin-bottom: 20px;
 }

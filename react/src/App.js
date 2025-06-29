@@ -8,24 +8,35 @@ function App() {
   const [previousValue, setPreviousValue] = useState(null);
   const [operation, setOperation] = useState(null);
   const [waitingForSecondValue, setWaitingForSecondValue] = useState(false);
+  const [error, setError] = useState('');
 
   const handleNumberClick = (value) => {
     if (display === '0' && value !== '.') {
       setDisplay(value);
+    } else if (value === '.' && display.includes('.')) {
+      return;
     } else {
       setDisplay(display + value);
     }
     setWaitingForSecondValue(false);
+    setError('');
   };
 
   const handleOperationClick = (op) => {
-    setPreviousValue(parseFloat(display));
-    setOperation(op);
-    setWaitingForSecondValue(true);
-    setDisplay('0');
+    if (display === '0' && !previousValue) return;
+
+    if (previousValue && !waitingForSecondValue) {
+      calculateResult(op);
+    } else {
+      setPreviousValue(parseFloat(display));
+      setOperation(op);
+      setWaitingForSecondValue(true);
+      setDisplay('0');
+    }
+    setError('');
   };
 
-  const calculateResult = () => {
+  const calculateResult = (nextOp = null) => {
     if (!previousValue || !operation) return;
 
     const currentValue = parseFloat(display);
@@ -39,16 +50,21 @@ function App() {
       result = previousValue * currentValue;
     } else if (operation === '/') {
       if (currentValue === 0) {
+        setError('Division by zero');
         setDisplay('Error');
+        setPreviousValue(null);
+        setOperation(null);
+        setWaitingForSecondValue(false);
         return;
       }
       result = previousValue / currentValue;
     }
 
     setDisplay(result.toString());
-    setPreviousValue(null);
-    setOperation(null);
-    setWaitingForSecondValue(false);
+    setPreviousValue(nextOp ? result : null);
+    setOperation(nextOp || null);
+    setWaitingForSecondValue(!!nextOp);
+    setError('');
   };
 
   const handleClear = () => {
@@ -56,6 +72,7 @@ function App() {
     setPreviousValue(null);
     setOperation(null);
     setWaitingForSecondValue(false);
+    setError('');
   };
 
   const buttons = [
@@ -73,6 +90,11 @@ function App() {
           <Typography variant="h6" className="calculator-title">
             Simple Calculator
           </Typography>
+          {error && (
+            <Typography variant="body2" color="error" className="calculator-error">
+              {error}
+            </Typography>
+          )}
           <TextField
             variant="outlined"
             value={display}
